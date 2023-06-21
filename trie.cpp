@@ -1,138 +1,76 @@
 #include <bits/stdc++.h>
-#define ll long long int
 using namespace std;
-struct Node
+const int N = 1e5 + 10;
+int idx;
+int Try[N][54];
+int value(char ch)
 {
-    Node *links[26];
-    int countEnd = 0;
-    int countPrefix = 0;
-    bool contains(char c)
-    {
-        return links[c - 'a'] != NULL;
-    }
-    void put(char c, Node *node)
-    {
-        links[c - 'a'] = node;
-    }
-    Node *get(char c)
-    {
-        return links[c - 'a'];
-    }
-    void increaseEnd()
-    {
-        countEnd++;
-    }
-    void increasePrefix()
-    {
-        countPrefix++;
-    }
-    bool isEnd()
-    {
-        return countEnd;
-    }
-    void decreaseEnd()
-    {
-        countEnd--;
-    }
-    void decreasePrefix()
-    {
-        countPrefix--;
-    }
-};
-class Trie
+    if (isupper(ch))
+        return ch - 'A';
+    else
+        return ch - 'a' + 26;
+}
+void insert(string &word)
 {
-private:
-    Node *root;
-
-public:
-    Trie()
+    int curr = 0;
+    for (int i = 0; i < word.size(); ++i)
     {
-        root = new Node();
-    }
-    void insert(string word)
-    {
-        Node *node = root;
-        for (int i = 0; i < word.size(); ++i)
+        if (Try[curr][value(word[i])] == -1)
         {
-            if (!node->contains(word[i]))
-            {
-                node->put(word[i], new Node());
-            }
-            node = node->get(word[i]);
-            node->increasePrefix();
+            Try[curr][value(word[i])] = ++idx;
+            memset(Try[idx], -1, sizeof(Try[idx]));
+            Try[idx][52] = 0;
+            Try[idx][53] = 0;
         }
-        node->increaseEnd();
+        curr = Try[curr][value(word[i])];
+        Try[curr][53]++;
     }
-    bool search(string word)
+    Try[curr][52]+=1;
+}
+bool search(string &word)
+{
+    int curr = 0;
+    for (int i = 0; i < word.size(); ++i)
     {
-        Node *node = root;
-        for (int i = 0; i < word.size(); ++i)
+        if (Try[curr][value(word[i])] == -1)
         {
-            if (!node->contains(word[i]))
-                return false;
-            node = node->get(word[i]);
+            return false;
         }
-        return node->isEnd();
+        curr = Try[curr][value(word[i])];
     }
-    bool startswith(string word)
+    return Try[curr][52];
+}
+int countWordsEndingWith(string &word)
+{
+    int curr = 0;
+    for (int i = 0; i < word.size(); ++i)
     {
-        Node *node = root;
-        for (int i = 0; i < word.size(); ++i)
-        {
-            if (!node->contains(word[i]))
-                return false;
-            node = node->get(word[i]);
+        if (Try[curr][value(word[i])] == -1){
+            return 0;
         }
-        return true;
+        curr = Try[curr][value(word[i])];
     }
-    int countWordsEqualTo(string word)
-    {
-        Node *node = root;
-        for (int i = 0; i < word.size(); ++i)
-        {
-            if (!node->contains(word[i]))
-                return 0;
-            node = node->get(word[i]);
-        }
-        return node->countEnd;
-    }
-    int countWordsStartingWith(string word)
-    {
-        Node *node = root;
-        for (int i = 0; i < word.size(); ++i)
-        {
-            if (!node->contains(word[i]))
-                return 0;
-            node = node->get(word[i]);
-        }
-        return node->countPrefix;
-    }
-    void erase(string word)
-    {
-        if (!search(word))
-            return;
-        Node *node = root;
-        for (int i = 0; i < word.size(); ++i)
-        {
-            node = node->get(word[i]);
-            node->decreasePrefix();
-        }
-        node->decreaseEnd();
+    return Try[curr][52];
+}
+void erase(string &word)
+{
+    if (!search(word))
         return;
+    int curr = 0;
+    for (int i = 0; i < word.size(); ++i)
+    {
+        curr = Try[curr][value(word[i])];
     }
-};
-int main()
+    Try[curr][52]--;
+}
+int countWordsStartingWith(string &word)
 {
-    Trie t;
-    t.insert("rifat");
-    t.insert("rifat");
-    t.insert("rifat");
-    t.insert("rif");
-    t.insert("apple");
-    t.insert("apps");
-    t.erase("rifat");
-    t.erase("rifat");
-    t.erase("rifat");
-    cout << t.countWordsStartingWith("rif") << endl;
-    return 0;
+    int curr = 0;
+    for (int i = 0; i < word.size(); ++i)
+    {
+        if (Try[curr][value(word[i])] == -1)
+            return 0;
+        curr = Try[curr][value(word[i])];
+    }
+    return Try[curr][53];
 }
